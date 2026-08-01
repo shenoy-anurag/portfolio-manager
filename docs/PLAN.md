@@ -6,12 +6,12 @@ A single-user, self-hosted web app that tracks all Indian investments (demat sto
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Next.js 15 (App Router) + TypeScript | Server-side fetching, API routes for refresh/import |
-| UI | Tailwind CSS + shadcn/ui | Requested, fast consistent components |
-| Charts | Recharts (via shadcn/ui chart components) | Donut, bar, line, treemap supported |
-| DB | SQLite + Prisma ORM | Zero-config, single file, personal tool |
-| Excel parsing | `xlsx` (SheetJS) | Zerodha / CAMS Excel exports |
-| PDF parsing | `pdfjs-dist` | Password-protected CAMS CAS PDFs |
+| Framework | Next.js 16 (App Router) + TypeScript | Server-side fetching, API routes for refresh/import |
+| UI | Tailwind CSS + shadcn/ui (radix-nova) | Requested, fast consistent components |
+| Charts | Recharts | Donut, area, bar, line supported |
+| DB | SQLite + Prisma 7 (driver adapter `@prisma/adapter-better-sqlite3`) | Zero-config, single file, personal tool |
+| Excel parsing | `exceljs` | Zerodha / CAMS Excel exports |
+| PDF parsing | `pdfjs-dist` (legacy build) | Password-protected CAMS CAS PDFs |
 | Yahoo data | Server-side REST `query1.finance.yahoo.com` (chart + batch quote) | NSE `.NS`, BSE `.BO`, US tickers, `INR=X`, history. No key |
 | MF NAV | AMFI `NAVAll.txt` (official daily dump) | Authoritative daily NAV for all schemes |
 | Scheduler | `node-cron` via Next.js `instrumentation.ts` `register()` | Runs inside the server process |
@@ -69,7 +69,7 @@ A single-user, self-hosted web app that tracks all Indian investments (demat sto
 
 ## Build Phases
 
-1. Scaffold — Next.js 15 + TS + Tailwind + shadcn/ui + Prisma/SQLite (pnpm)
+1. Scaffold — Next.js 16 + TS + Tailwind + shadcn/ui + Prisma/SQLite (pnpm)
 2. Data model + providers + refresh engine
 3. Manual entry
 4. Zerodha XLSX importer

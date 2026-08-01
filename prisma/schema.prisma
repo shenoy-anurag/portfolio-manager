@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AssetClass {
+  equity
+  mf_equity
+  mf_debt
+  ppf
+  epfo
+  fd
+  us_equity
+  gold
+  cash
+  other
+}
+
+enum InstrumentSource {
+  yahoo
+  amfi
+  manual
+}
+
+enum AccountType {
+  demat
+  mf
+  ppf
+  epfo
+  fd
+  us
+  cash
+  other
+}
+
+model Instrument {
+  id           String           @id @default(cuid())
+  symbol       String
+  name         String
+  assetClass   AssetClass
+  source       InstrumentSource
+  currency     String           @default("INR")
+  amfiCode     String?
+  isin         String?
+  interestRate Decimal?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  holdings     Holding[]
+  transactions Transaction[]
+  pricePoints  PricePoint[]
+
+  @@unique([source, symbol])
+}
+
+model Broker {
+  id       String    @id @default(cuid())
+  name     String
+  kind     String
+  accounts Account[]
+
+  @@unique([name])
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  brokerId     String
+  broker       Broker        @relation(fields: [brokerId], references: [id])
+  name         String
+  type         AccountType
+  currency     String        @default("INR")
+  params       Json
+  createdAt    DateTime      @default(now())
+
+  holdings     Holding[]
+  transactions Transaction[]
+
+  @@unique([brokerId, type, name])
+}
+
+model Holding {
+  id           String     @id @default(cuid())
+  accountId    String
+  account      Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  instrumentId String
+  instrument   Instrument @relation(fields: [instrumentId], references: [id])
+  quantity     Decimal
+  avgCost      Decimal
+  purchaseDate DateTime?
+  params       Json
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([accountId, instrumentId])
+}
+
+model Transaction {
+  id           String     @id @default(cuid())
+  accountId    String
+  account      Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  instrumentId String
+  instrument   Instrument @relation(fields: [instrumentId], references: [id])
+  type         String
+  date         DateTime
+  quantity     Decimal?
+  amount       Decimal?
+  nav          Decimal?
+  folio        String?
+  notes        String?
+  externalId   String?
+  createdAt    DateTime   @default(now())
+
+  @@index([accountId])
+  @@index([instrumentId])
+  @@unique([externalId])
+}
+
+model PricePoint {
+  id           String     @id @default(cuid())
+  instrumentId String
+  instrument   Instrument @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+  date         DateTime
+  price        Decimal
+  currency     String     @default("INR")
+
+  @@unique([instrumentId, date])
+  @@index([date])
+}
+
+model FxRate {
+  id       String   @id @default(cuid())
+  date     DateTime
+  currency String
+  inrRate  Decimal
+
+  @@unique([currency, date])
+}
+
+model Snapshot {
+  id            String   @id @default(cuid())
+  date          DateTime @unique
+  totalValueInr Decimal
+  investedInr   Decimal
+  breakdown     Json
+  createdAt     DateTime @default(now())
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model ImportLog {
+  id        String    @id @default(cuid())
+  source    String
+  fileName  String?
+  status    String
+  summary   Json?
+  error     String?
+  createdAt DateTime  @default(now())
+}
+
+model RefreshLog {
+  id         String    @id @default(cuid())
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  status     String
+  message    String?
+}
