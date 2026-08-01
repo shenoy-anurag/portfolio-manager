@@ -174,7 +174,7 @@ export default function SettingsPage() {
                 concentration flag.
               </p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="border p-3">
               <ToggleRow
                 label="AI-powered assessment (coming soon)"
                 description="When enabled, an OpenAI-backed narrative review will be generated on the Analytics page."

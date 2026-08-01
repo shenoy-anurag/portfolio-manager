@@ -1,98 +1,136 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-  LayoutDashboard,
-  Wallet,
-  Upload,
-  BarChart3,
-  Settings,
-  Sun,
-  Moon,
-} from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/holdings", label: "Holdings", icon: Wallet },
-  { href: "/import", label: "Import", icon: Upload },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", label: "Dashboard" },
+  { href: "/holdings", label: "Holdings" },
+  { href: "/import", label: "Import" },
+  { href: "/analytics", label: "Analytics" },
+  { href: "/settings", label: "Settings" },
 ]
+
+const SWIPE_THRESHOLD = 50
+
+function isInteractive(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return true
+  return Boolean(
+    target.closest("a, button, input, textarea, select, [role='button'], [data-no-swipe]"),
+  )
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const mobileNavRef = useRef<HTMLDivElement>(null)
+  const touchStart = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null)
+
+  const activeIndex = NAV.findIndex((item) => pathname === item.href)
+
+  useEffect(() => {
+    const active = mobileNavRef.current?.querySelector<HTMLElement>("[data-active='true']")
+    active?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
+  }, [pathname])
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, target: e.target }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    const { x, y, target } = touchStart.current
+    touchStart.current = null
+
+    if (isInteractive(target)) return
+
+    const dx = e.changedTouches[0].clientX - x
+    const dy = e.changedTouches[0].clientY - y
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dy) > Math.abs(dx)) return
+
+    const nextIndex = activeIndex + (dx < 0 ? 1 : -1)
+    if (nextIndex >= 0 && nextIndex < NAV.length) {
+      router.push(NAV[nextIndex].href)
+    }
+  }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 flex-col border-r bg-sidebar md:flex">
-        <div className="flex h-14 items-center gap-2 border-b px-4">
-          <div className="size-6 rounded-md bg-primary" />
-          <span className="text-sm font-semibold">Portfolio Manager</span>
-        </div>
-        <nav className="flex-1 space-y-1 p-2">
-          {NAV.map((item) => {
-            const active = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  active && "bg-accent text-accent-foreground",
-                )}
-              >
-                <item.icon className="size-4" />
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
-        <div className="border-t p-2">
+    <div className="flex min-h-screen flex-col">
+      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 font-bold">
+        <div className="flex h-10 items-center gap-1.5 px-2 md:h-14 md:gap-2 md:px-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Portfolio Manager">
+            <div className="size-6 shrink-0 bg-primary" />
+            <span className="hidden text-sm font-bold md:inline">Portfolio Manager</span>
+          </Link>
+
+          <div className="ml-2 hidden items-center gap-1 md:flex font-bold">
+            {NAV.map((item) => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "relative px-3 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground",
+                    active && "text-primary",
+                  )}
+                >
+                  {item.label}
+                  {active && (
+                    <span className="absolute inset-x-2 -bottom-px h-0.5 bg-primary" />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+
+          <div
+            ref={mobileNavRef}
+            className="flex flex-1 items-center gap-1 overflow-x-auto py-1 md:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {NAV.map((item) => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-active={active}
+                  className={cn(
+                    "shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground",
+                    active && "text-primary",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </div>
+
           <Button
             variant="ghost"
-            size="sm"
-            className="w-full justify-start"
+            size="icon"
+            className="shrink-0 text-muted-foreground"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            {theme === "dark" ? "Light mode" : "Dark mode"}
           </Button>
         </div>
-      </aside>
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center gap-2 border-b px-4 md:hidden">
-          <span className="text-sm font-semibold">Portfolio Manager</span>
-          <div className="ml-auto flex items-center gap-1">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-md p-2 text-muted-foreground",
-                  pathname === item.href && "bg-accent text-accent-foreground",
-                )}
-                aria-label={item.label}
-              >
-                <item.icon className="size-4" />
-              </Link>
-            ))}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
-          </div>
-        </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
-      </div>
+      </nav>
+
+      <main
+        className="flex-1 p-4 md:p-6"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {children}
+      </main>
     </div>
   )
 }

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { formatINR, formatPercent, formatDate } from "@/lib/format"
 import { ASSET_CLASS_LABELS } from "@/lib/constants"
+import { cn } from "@/lib/utils"
 
 interface HoldingRow {
   holdingId: string
@@ -107,11 +108,11 @@ export default function HoldingsPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
+        <div className="border border-dashed p-10 text-center text-sm text-muted-foreground">
           No holdings yet. Head to Import to upload a statement or add entries manually.
         </div>
       ) : (
-        <div className="rounded-lg border">
+        <div className="border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -177,28 +178,30 @@ export default function HoldingsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="text-sm">{formatINR(h.price)}</span>
+                      <span className="text-sm tabular-nums">{formatINR(h.price)}</span>
                       {h.priceDate && (
                         <p className="text-xs text-muted-foreground">
                           {formatDate(h.priceDate)}
                         </p>
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-medium tabular-nums">
                       {formatINR(h.valueInr)}
                     </TableCell>
                     <TableCell className="text-right">
                       <span
-                        className={`text-sm font-medium ${
-                          h.pnlInr >= 0 ? "text-emerald-600" : "text-red-600"
-                        }`}
+                        className={cn(
+                          "text-sm font-medium tabular-nums",
+                          h.pnlInr >= 0 ? "text-positive" : "text-negative",
+                        )}
                       >
                         {formatINR(h.pnlInr)}
                       </span>
                       <p
-                        className={`text-xs ${
-                          h.pnlInr >= 0 ? "text-emerald-600" : "text-red-600"
-                        }`}
+                        className={cn(
+                          "text-xs tabular-nums",
+                          h.pnlInr >= 0 ? "text-positive" : "text-negative",
+                        )}
                       >
                         {formatPercent(h.pnlPercent)}
                       </p>

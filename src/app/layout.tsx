@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  weight: ["300", "400", "500", "700", "800"],
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// const rubik = Rubik({
+//   weight: ["300", "400", "500", "700"],
+//   variable: "--font-recursive",
+//   subsets: ["latin"],
+// });
+
+const spaceMono = Space_Mono({
+  weight: [ "400", "700"],
+  variable: "--font-space-mono",
   subsets: ["latin"],
 });
 
@@ -27,7 +35,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${manrope.variable} ${spaceMono.variable} font-sans antialiased`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':true;if(t==='system'){d=window.matchMedia('(prefers-color-scheme: dark)').matches}document.documentElement.classList.add(d?'dark':'light')}catch(e){document.documentElement.classList.add('dark')}})()`,
+          }}
+        />
         <ThemeProvider>
           <AppShell>{children}</AppShell>
           <Toaster richColors position="top-center" />

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Progress } from "@/components/ui/progress"
 import { formatINR, formatPercent } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 interface Analytics {
   totalValue: number
@@ -143,7 +144,7 @@ export default function AnalyticsPage() {
             data.opportunities.map((o, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 rounded-lg border p-3"
+                className="flex items-start gap-3 border p-3"
               >
                 <Badge variant={SEVERITY_STYLE[o.severity] as "default" | "secondary" | "destructive" | "outline"}>
                   {o.severity}
@@ -181,13 +182,11 @@ function MetricCard({
         {value ? (
           <>
             <p
-              className={`text-2xl font-semibold tracking-tight ${
-                positive === true
-                  ? "text-emerald-600"
-                  : positive === false
-                    ? "text-red-600"
-                    : ""
-              }`}
+              className={cn(
+                "text-3xl font-semibold tracking-tight tabular-nums",
+                positive === true && "text-positive",
+                positive === false && "text-negative",
+              )}
             >
               {value}
             </p>

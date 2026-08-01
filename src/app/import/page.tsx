@@ -204,16 +204,16 @@ export default function ImportPage() {
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg border p-4">
+                  <div className="border p-4">
                     <p className="text-xs text-muted-foreground">Holdings</p>
                     <p className="text-2xl font-semibold">{holdingsCount}</p>
                   </div>
-                  <div className="rounded-lg border p-4">
+                  <div className="border p-4">
                     <p className="text-xs text-muted-foreground">Transactions</p>
                     <p className="text-2xl font-semibold">{txnCount}</p>
                   </div>
                 </div>
-                <div className="max-h-64 overflow-auto rounded-lg border">
+                <div className="max-h-64 overflow-auto border">
                   <div className="divide-y">
                     {(parsed.preview?.holdings ?? []).slice(0, 20).map((h, i) => (
                       <div
