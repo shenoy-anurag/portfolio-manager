@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
+import KBarWrapper from "@/components/KBarWrapper";
 
 const manrope = Manrope({
   weight: ["300", "400", "500", "700", "800"],
@@ -18,7 +19,7 @@ const manrope = Manrope({
 // });
 
 const spaceMono = Space_Mono({
-  weight: [ "400", "700"],
+  weight: ["400", "700"],
   variable: "--font-space-mono",
   subsets: ["latin"],
 });
@@ -42,8 +43,10 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
-          <AppShell>{children}</AppShell>
-          <Toaster richColors position="top-center" />
+          <KBarWrapper>
+            <AppShell>{children}</AppShell>
+            <Toaster richColors position="top-center" />
+          </KBarWrapper>
         </ThemeProvider>
       </body>
     </html>

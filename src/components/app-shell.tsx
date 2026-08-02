@@ -7,9 +7,10 @@ import { Moon, Sun } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import SvgIcon from "@/components/icons/svg-icon";
 
 const NAV = [
-  { href: "/", label: "Dashboard" },
+  { href: "/", label: "Portfolio Overview" },
   { href: "/holdings", label: "Holdings" },
   { href: "/import", label: "Import" },
   { href: "/analytics", label: "Analytics" },
@@ -61,11 +62,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 font-bold">
+    <div className="flex min-h-screen flex-col mx-auto w-full lg:px-16 md:px-12 px-4">
+      <nav className="sticky top-0 z-50 pb-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 font-bold">
         <div className="flex h-10 items-center gap-1.5 px-2 md:h-14 md:gap-2 md:px-4">
           <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Portfolio Manager">
-            <div className="size-6 shrink-0 bg-primary" />
+            <SvgIcon className="h-6 w-6" icon={"LogoIcon"} />
             <span className="hidden text-sm font-bold md:inline">Portfolio Manager</span>
           </Link>
 
@@ -82,9 +83,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   {item.label}
-                  {active && (
+                  {/* {active && (
                     <span className="absolute inset-x-2 -bottom-px h-0.5 bg-primary" />
-                  )}
+                  )} */}
                 </Link>
               )
             })}
@@ -125,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <main
-        className="flex-1 p-4 md:p-6"
+        className="flex-1"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
