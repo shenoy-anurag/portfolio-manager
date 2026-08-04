@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Moon, Sun } from "lucide-react"
+import { useKBar } from "kbar"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const { query } = useKBar()
   const mobileNavRef = useRef<HTMLDivElement>(null)
   const touchStart = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null)
 
@@ -62,13 +64,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col mx-auto w-full lg:px-16 md:px-12 px-4">
+    <div className="flex min-h-screen flex-col mx-auto w-full lg:px-16 md:px-12 px-5">
       <nav className="sticky top-0 z-50 pb-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 font-bold">
         <div className="flex h-10 items-center gap-1.5 px-2 md:h-14 md:gap-2 md:px-4">
-          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Portfolio Manager">
+          <Link href="/" className="flex shrink-0 items-center pr-4 gap-2" aria-label="Portfolio Manager">
             <SvgIcon className="h-6 w-6" icon={"LogoIcon"} />
             <span className="hidden text-sm font-bold md:inline">Portfolio Manager</span>
           </Link>
+
+          <button
+            type="button"
+            onClick={() => query.toggle()}
+            className="flex h-8 shrink-0 items-center gap-2 border bg-muted/50 px-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:w-44 lg:w-56"
+            aria-label="Open search"
+          >
+            <SvgIcon className="shrink-0" icon={"Search"} size={4} />
+            <span className="hidden text-sm md:inline">Search…</span>
+            <kbd className="ml-auto hidden border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground md:inline-flex">
+              ⌘K
+            </kbd>
+          </button>
 
           <div className="ml-2 hidden items-center gap-1 md:flex font-bold">
             {NAV.map((item) => {
@@ -78,7 +93,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "relative px-3 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground",
+                    "relative px-3 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-primary",
                     active && "text-primary",
                   )}
                 >

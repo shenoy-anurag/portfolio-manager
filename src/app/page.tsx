@@ -178,7 +178,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight pb-2">Portfolio Overview</h1>
           <p className="text-sm text-muted-foreground">
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                       nameKey="name"
                       innerRadius={50}
                       outerRadius={85}
-                      paddingAngle={2}
+                      paddingAngle={0}
                       strokeWidth={0}
                       onMouseLeave={() => setActiveIndex(-1)}
                     >
