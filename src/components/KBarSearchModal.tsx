@@ -14,7 +14,7 @@ export default function KBarSearchModal() {
         <KBarPortal>
             {/* Background overlay */}
             <KBarPositioner className="bg-black/40 backdrop-blur-sm fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
-                <KBarAnimator className="w-full max-w-xl bg-white dark:bg-zinc-900 rounded-xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                <KBarAnimator className="w-full max-w-xl bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
 
                     {/* Input field */}
                     <KBarSearch className="w-full px-4 py-4 text-base bg-transparent border-b border-zinc-200 dark:border-zinc-800 outline-none placeholder-zinc-400 text-zinc-900 dark:text-zinc-100" placeholder="Type a command or search..." />
@@ -46,7 +46,7 @@ function RenderResults() {
                 ) : (
                     // Renders individual action items
                     <div
-                        className={`px-4 py-3 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${active
+                        className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${active
                                 ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                                 : "text-zinc-600 dark:text-zinc-400"
                             }`}
