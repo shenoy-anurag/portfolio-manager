@@ -6,6 +6,7 @@ export interface HoldingValuation {
   instrumentId: string
   accountId: string
   accountName: string
+  accountType: string
   brokerName: string
   symbol: string
   name: string
@@ -14,6 +15,7 @@ export interface HoldingValuation {
   currency: string
   quantity: number
   avgCost: number
+  purchaseDate: string | null
   price: number
   priceDate: string | null
   valueInCurrency: number
@@ -103,6 +105,7 @@ export async function computeValuation(): Promise<PortfolioTotals> {
       instrumentId: instrument.id,
       accountId: account.id,
       accountName: account.name,
+      accountType: account.type,
       brokerName: account.broker.name,
       symbol: instrument.symbol,
       name: instrument.name,
@@ -111,6 +114,7 @@ export async function computeValuation(): Promise<PortfolioTotals> {
       currency: instrument.currency,
       quantity,
       avgCost,
+      purchaseDate: h.purchaseDate ? h.purchaseDate.toISOString().slice(0, 10) : null,
       price,
       priceDate,
       valueInCurrency,

@@ -19,7 +19,7 @@ export async function resolveAmfiSchemes(
     seen.add(name)
     const match = matchScheme(byCode, name)
     if (match) {
-      result.set(name, { amfiCode: match.schemeCode, isin: match.isin, name: match.schemeName })
+      result.set(name, { amfiCode: match.schemeCode, isin: match.isinGrowth, name: match.schemeName })
     }
   }
   return result

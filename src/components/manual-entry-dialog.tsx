@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -38,72 +38,101 @@ const ACCOUNT_TYPES = [
   { value: "other", label: "Other" },
 ]
 
+const DEFAULT_FORM = {
+  symbol: "",
+  name: "",
+  assetClass: "other",
+  accountType: "other",
+  accountName: "",
+  broker: "",
+  currency: "INR",
+  quantity: "",
+  avgCost: "",
+  purchaseDate: "",
+}
+
+export interface HoldingToEdit {
+  holdingId: string
+  symbol: string
+  name: string
+  assetClass: string
+  accountType: string
+  accountName: string
+  brokerName: string
+  currency: string
+  quantity: number
+  avgCost: number
+  purchaseDate: string | null
+}
+
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   onDone?: () => void
+  holding?: HoldingToEdit | null
 }
 
-export function ManualEntryDialog({ open, onOpenChange, onDone }: Props) {
-  const [form, setForm] = useState({
-    symbol: "",
-    name: "",
-    assetClass: "other",
-    accountType: "other",
-    accountName: "",
-    broker: "",
-    currency: "INR",
-    quantity: "",
-    avgCost: "",
-    purchaseDate: "",
-  })
+export function ManualEntryDialog({ open, onOpenChange, onDone, holding }: Props) {
+  const [form, setForm] = useState(DEFAULT_FORM)
   const [saving, setSaving] = useState(false)
 
-  const reset = () => {
-    setForm({
-      symbol: "",
-      name: "",
-      assetClass: "other",
-      accountType: "other",
-      accountName: "",
-      broker: "",
-      currency: "INR",
-      quantity: "",
-      avgCost: "",
-      purchaseDate: "",
-    })
-  }
+  const isEdit = Boolean(holding)
+
+  useEffect(() => {
+    if (!open) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm(
+      holding
+        ? {
+            symbol: holding.symbol,
+            name: holding.name,
+            assetClass: holding.assetClass,
+            accountType: holding.accountType,
+            accountName: holding.accountName,
+            broker: holding.brokerName,
+            currency: holding.currency,
+            quantity: String(holding.quantity),
+            avgCost: String(holding.avgCost),
+            purchaseDate: holding.purchaseDate ?? "",
+          }
+        : DEFAULT_FORM,
+    )
+  }, [open, holding])
 
   const submit = async () => {
     setSaving(true)
     try {
-      const res = await fetch("/api/holdings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol: form.symbol,
-          name: form.name,
-          assetClass: form.assetClass,
-          accountType: form.accountType,
-          accountName: form.accountName || undefined,
-          broker: form.broker || undefined,
-          currency: form.currency,
-          quantity: Number(form.quantity),
-          avgCost: Number(form.avgCost),
-          purchaseDate: form.purchaseDate || undefined,
-        }),
-      })
+      const payload = {
+        symbol: form.symbol,
+        name: form.name,
+        assetClass: form.assetClass,
+        accountType: form.accountType,
+        accountName: form.accountName || undefined,
+        broker: form.broker || undefined,
+        currency: form.currency,
+        quantity: Number(form.quantity),
+        avgCost: Number(form.avgCost),
+        purchaseDate: form.purchaseDate || undefined,
+      }
+      const res = await fetch(
+        isEdit ? `/api/holdings/${holding!.holdingId}` : "/api/holdings",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      )
       const data = await res.json()
       if (data.ok) {
-        toast.success("Holding added")
-        reset()
+        toast.success(isEdit ? "Holding updated" : "Holding added")
+        if (!isEdit) setForm(DEFAULT_FORM)
         onOpenChange(false)
         onDone?.()
       } else {
-        toast.error(data.error ?? "Failed to add")
+        toast.error(data.error ?? (isEdit ? "Update failed" : "Failed to add"))
       }
     } catch {
-      toast.error("Failed to add")
+      toast.error(isEdit ? "Update failed" : "Failed to add")
     } finally {
       setSaving(false)
     }
@@ -113,7 +142,7 @@ export function ManualEntryDialog({ open, onOpenChange, onDone }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add holding manually</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit holding" : "Add holding manually"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-2 sm:grid-cols-2">
           <Field label="Symbol / Code">
@@ -219,7 +248,7 @@ export function ManualEntryDialog({ open, onOpenChange, onDone }: Props) {
             Cancel
           </Button>
           <Button onClick={submit} disabled={saving}>
-            {saving ? "Adding…" : "Add holding"}
+            {isEdit ? (saving ? "Saving…" : "Save changes") : saving ? "Adding…" : "Add holding"}
           </Button>
         </div>
       </DialogContent>

@@ -32,7 +32,8 @@ export function parseNavDate(raw: string): string | null {
 
 export interface AmfiScheme {
   schemeCode: string
-  isin: string | null
+  isinGrowth: string | null
+  isinDivReInv: string | null
   schemeName: string
   nav: number
   date: string
@@ -40,14 +41,17 @@ export interface AmfiScheme {
 
 /**
  * Downloads and parses the official AMFI NAVAll.txt dump.
- * Returns a map of schemeCode -> scheme plus the raw records.
+ * Returns a map of schemeCode -> scheme, an index of isin -> scheme,
+ * plus the raw records.
  */
 export async function fetchAmfiNavs(): Promise<{
   byCode: Map<string, AmfiScheme>
+  byIsinGrowth: Map<string, AmfiScheme>
+  byIsinDivReInv: Map<string, AmfiScheme>
   records: AmfiScheme[]
 }> {
   const res = await fetch(AMFI_NAV_URL, {
-    cache: 'no-store',
+    cache: 'default',
     headers: { Accept: 'text/plain' },
   })
   if (!res.ok) throw new Error(`AMFI fetch failed: ${res.status}`)
@@ -58,19 +62,29 @@ export async function fetchAmfiNavs(): Promise<{
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('AMFI;') || trimmed.startsWith('Scheme Code;')) continue
     const parts = trimmed.split(';')
-    // Records have at least 6 fields: code, isinGrowth, isinPayout, name, nav, date
+    // Records have at least 6 fields: code, isinGrowth, isinPayout / isin Dividend Reinvestment, name, nav, date
     if (parts.length < 6) continue
     const schemeCode = parts[0]?.trim()
-    const isin = parts[1]?.trim() || null
+    const isinGrowth = parts[1]?.trim() || null
+    const isinDivReInv = parts[2]?.trim() || null
     const schemeName = parts[3]?.trim()
     const nav = Number(parts[4])
     const date = parseNavDate((parts[5]?.trim() ?? '') ) ?? ''
     if (!schemeCode || !schemeName || !Number.isFinite(nav)) continue
     if (!date) continue
-    records.push({ schemeCode, isin, schemeName, nav, date })
+    records.push({ schemeCode, isinGrowth, isinDivReInv, schemeName, nav, date })
   }
   const byCode = new Map(records.map((r) => [r.schemeCode, r]))
-  return { byCode, records }
+  // const byIsin = new Map(records.map((r) => [r.isin, r]))
+  const byIsinGrowth = new Map<string, AmfiScheme>()
+  for (const r of records) {
+    if (r.isinGrowth) byIsinGrowth.set(r.isinGrowth, r)
+  }
+const byIsinDivReInv = new Map<string, AmfiScheme>()
+  for (const r of records) {
+    if (r.isinDivReInv) byIsinDivReInv.set(r.isinDivReInv, r)
+  }
+  return { byCode, byIsinGrowth, byIsinDivReInv, records }
 }
 
 export function normalizeSchemeName(name: string): string {
@@ -103,4 +117,17 @@ export function matchScheme(
     }
   }
   return best
+}
+
+export function matchISIN(
+  isin: string,
+  byIsinGrowth: Map<string, AmfiScheme>,
+  byIsinDivReInv: Map<string, AmfiScheme>,
+): AmfiScheme | null {
+  if (!isin) return null
+  const schemeGrowth = byIsinGrowth.get(isin)
+  if (schemeGrowth && schemeGrowth != undefined) return schemeGrowth
+  const schemeDiv = byIsinDivReInv.get(isin)
+  if (schemeDiv && schemeDiv != undefined) return schemeDiv
+  return null
 }

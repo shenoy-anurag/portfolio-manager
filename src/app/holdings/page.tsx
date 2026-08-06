@@ -12,8 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { ManualEntryDialog } from "@/components/manual-entry-dialog"
+import type { HoldingToEdit } from "@/components/manual-entry-dialog"
 import { formatINR, formatPercent, formatDate } from "@/lib/format"
 import { ASSET_CLASS_LABELS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
@@ -24,11 +25,13 @@ interface HoldingRow {
   name: string
   assetClass: string
   accountName: string
+  accountType: string
   brokerName: string
   source: string
   currency: string
   quantity: number
   avgCost: number
+  purchaseDate: string | null
   price: number
   priceDate: string | null
   valueInr: number
@@ -38,7 +41,8 @@ interface HoldingRow {
 
 export default function HoldingsPage() {
   const [rows, setRows] = useState<HoldingRow[]>([])
-  const [editing, setEditing] = useState<Record<string, { qty: string; cost: string }>>({})
+  const [editOpen, setEditOpen] = useState(false)
+  const [editingHolding, setEditingHolding] = useState<HoldingToEdit | null>(null)
 
   const load = useCallback(async () => {
     const res = await fetch("/api/holdings")
@@ -52,38 +56,8 @@ export default function HoldingsPage() {
   }, [load])
 
   const startEdit = (h: HoldingRow) => {
-    setEditing((prev) => ({
-      ...prev,
-      [h.holdingId]: { qty: String(h.quantity), cost: String(h.avgCost) },
-    }))
-  }
-
-  const save = async (h: HoldingRow) => {
-    const draft = editing[h.holdingId]
-    if (!draft) return
-    const quantity = Number(draft.qty)
-    const avgCost = Number(draft.cost)
-    if (!Number.isFinite(quantity) || !Number.isFinite(avgCost)) {
-      toast.error("Enter valid numbers")
-      return
-    }
-    const res = await fetch(`/api/holdings/${h.holdingId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity, avgCost }),
-    })
-    if (res.ok) {
-      toast.success("Holding updated")
-      setEditing((prev) => {
-        const next = { ...prev }
-        delete next[h.holdingId]
-        return next
-      })
-      await load()
-    } else {
-      const data = await res.json()
-      toast.error(data.error ?? "Update failed")
-    }
+    setEditingHolding(h)
+    setEditOpen(true)
   }
 
   const remove = async (h: HoldingRow) => {
@@ -129,7 +103,6 @@ export default function HoldingsPage() {
             </TableHeader>
             <TableBody>
               {rows.map((h) => {
-                const draft = editing[h.holdingId]
                 return (
                   <TableRow key={h.holdingId}>
                     <TableCell>
@@ -146,36 +119,10 @@ export default function HoldingsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {draft ? (
-                        <Input
-                          className="ml-auto h-8 w-24 text-right"
-                          value={draft.qty}
-                          onChange={(e) =>
-                            setEditing((p) => ({
-                              ...p,
-                              [h.holdingId]: { ...p[h.holdingId], qty: e.target.value },
-                            }))
-                          }
-                        />
-                      ) : (
-                        <span className="text-sm">{h.quantity.toLocaleString("en-IN")}</span>
-                      )}
+                      <span className="text-sm">{h.quantity.toLocaleString("en-IN")}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {draft ? (
-                        <Input
-                          className="ml-auto h-8 w-28 text-right"
-                          value={draft.cost}
-                          onChange={(e) =>
-                            setEditing((p) => ({
-                              ...p,
-                              [h.holdingId]: { ...p[h.holdingId], cost: e.target.value },
-                            }))
-                          }
-                        />
-                      ) : (
-                        <span className="text-sm">{formatINR(h.avgCost)}</span>
-                      )}
+                      <span className="text-sm">{formatINR(h.avgCost)}</span>
                     </TableCell>
                     <TableCell className="text-right">
                       <span className="text-sm tabular-nums">{formatINR(h.price)}</span>
@@ -207,35 +154,14 @@ export default function HoldingsPage() {
                       </p>
                     </TableCell>
                     <TableCell className="text-right">
-                      {draft ? (
-                        <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="default" onClick={() => save(h)}>
-                            Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              setEditing((p) => {
-                                const next = { ...p }
-                                delete next[h.holdingId]
-                                return next
-                              })
-                            }
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="outline" onClick={() => startEdit(h)}>
-                            Edit
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => remove(h)}>
-                            <Trash2 className="size-4 text-red-600" />
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => startEdit(h)}>
+                          Edit
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => remove(h)}>
+                          <Trash2 className="size-4 text-red-600" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
@@ -244,6 +170,16 @@ export default function HoldingsPage() {
           </Table>
         </div>
       )}
+
+      <ManualEntryDialog
+        open={editOpen}
+        onOpenChange={(open) => {
+          setEditOpen(open)
+          if (!open) setEditingHolding(null)
+        }}
+        onDone={load}
+        holding={editingHolding}
+      />
     </div>
   )
 }
